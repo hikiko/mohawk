@@ -7,6 +7,9 @@
 #include <string>
 
 #include "mesh.h"
+#include "hair.h"
+
+#define MAX_NUM_SPAWNS 500
 
 static bool init();
 static void cleanup();
@@ -18,6 +21,7 @@ static void motion(int x, int y);
 
 static std::vector<Mesh*> meshes;
 static Mesh *mesh_head;
+static Hair hair;
 
 int win_width, win_height;
 float cam_theta, cam_phi = 25, cam_dist = 8;
@@ -55,7 +59,7 @@ static bool init()
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
-	glClearColor(1, 0.5, 0.5, 1);
+	glClearColor(0.5, 0.5, 0.5, 1);
 	meshes = load_meshes("data/head.fbx");
 	if (meshes.empty()) {
 		fprintf(stderr, "Failed to load mesh.\n");
@@ -81,12 +85,24 @@ static bool init()
 			mesh_head = meshes[i];
 		}
 	}
+	if(!mesh_head) {
+		fprintf(stderr, "Failed to find the head mesh.\n");
+		return false;
+	}
+
+	if(!hair.init(mesh_head, MAX_NUM_SPAWNS, 0.1)) {
+		fprintf(stderr, "Failed to initialize hair\n");
+		return false;
+	}
 
 	return true;
 }
 
 static void cleanup()
 {
+	for(size_t i=0; i<meshes.size(); i++) {
+		delete meshes[i];
+	}
 }
 
 static void display()
@@ -99,11 +115,11 @@ static void display()
 	glRotatef(cam_phi, 1, 0, 0);
 	glRotatef(cam_theta, 0, 1, 0);
 
-	glTranslatef(0, -16, 0);
-
 	for(size_t i=0; i<meshes.size(); i++) {
 		meshes[i]->draw();
 	}
+
+	hair.draw();
 
 	glutSwapBuffers();
 	assert(glGetError() == GL_NO_ERROR);
