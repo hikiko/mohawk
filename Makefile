@@ -10,7 +10,7 @@ inc = -Isrc -Isrc/shaders -Isrc/math
 
 CXX = g++
 CXXFLAGS = -pedantic -Wall $(dbg) $(opt) $(inc)
-LDFLAGS = -lGL -lGLU -lglut -lGLEW -limago -lassimp
+LDFLAGS = -lGL -lGLU -lglut -lGLEW -limago -lassimp -lgmath
 
 $(bin): $(obj)
 	$(CXX) -o $@ $(obj) $(LDFLAGS)

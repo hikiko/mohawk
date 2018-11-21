@@ -5,10 +5,19 @@
 
 #include "mesh.h" 
 
+struct HairStrand {
+	Vec3 pos;
+	Vec3 velocity;
+	/* directions relative to the spawn point */
+	Vec3 anchor_dirs[3];
+	Vec3 spawn_pt;
+	Vec3 spawn_dir;
+};
+
 class Hair {
 private:
-	std::vector<Vec3> spawn_points;
-	std::vector<Vec3> spawn_directions;
+	float hair_length;
+	std::vector<HairStrand> hair;
 
 public:
 	Hair();

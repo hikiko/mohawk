@@ -9,7 +9,8 @@
 #include "mesh.h"
 #include "hair.h"
 
-#define MAX_NUM_SPAWNS 500
+#define MAX_NUM_SPAWNS 4
+#define THRESH 0.5
 
 static bool init();
 static void cleanup();
@@ -90,7 +91,7 @@ static bool init()
 		return false;
 	}
 
-	if(!hair.init(mesh_head, MAX_NUM_SPAWNS, 0.1)) {
+	if(!hair.init(mesh_head, MAX_NUM_SPAWNS, THRESH)) {
 		fprintf(stderr, "Failed to initialize hair\n");
 		return false;
 	}

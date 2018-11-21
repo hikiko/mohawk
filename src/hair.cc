@@ -13,8 +13,14 @@ struct Triangle {
 	Vec3 n[3];
 };
 
-Hair::Hair() {}
-Hair::~Hair() {}
+Hair::Hair()
+{
+	hair_length = 0.5;
+}
+
+Hair::~Hair()
+{
+}
 
 static Vec3 calc_rand_point(const Triangle &tr, Vec3 *bary)
 {
@@ -34,7 +40,6 @@ static Vec3 calc_rand_point(const Triangle &tr, Vec3 *bary)
 	bary->y = v;
 	bary->z = c;
 
-//	printf("u %f v %f c %f sum: %f\n", u, v, c, u+v+c);
 	return rp;
 }
 
@@ -104,28 +109,69 @@ bool Hair::init(const Mesh *m, int max_num_spawns, float thresh)
 				continue;
 		}
 
+		HairStrand strand;
 		/* weighted sum of the triangle's vertex normals */
-		Vec3 spawn_dir = rtriangle.n[0] * bary.x + rtriangle.n[1] * bary.y + rtriangle.n[2] * bary.z;
-		spawn_directions.push_back(normalize(spawn_dir));
-		spawn_points.push_back(rpoint);
+		strand.spawn_dir = normalize(rtriangle.n[0] * bary.x + rtriangle.n[1] * bary.y + rtriangle.n[2] * bary.z);
+		strand.spawn_pt = rpoint;
+		hair.push_back(strand);
+
 		kd_insert3f(kd, rpoint.x, rpoint.y, rpoint.z, 0);
 	}
 
 	kd_free(kd);
+
+	for(size_t i=0; i<hair.size(); i++) {
+		hair[i].pos = hair[i].spawn_pt + hair[i].spawn_dir * hair_length;
+		
+		/* orthonormal basis */
+		Vec3 vk = hair[i].spawn_dir;
+		Vec3 vi = Vec3(1, 0, 0);
+		if(fabs(vk.x > 0.99)) {
+			vi = Vec3(0, -1, 0);
+		}
+		Vec3 vj = normalize(cross(vk, vi));
+		vi = cross(vj, vk);
+
+		/* identity when the hair points to the z axis */
+		Mat4 basis = Mat4(vi, vj, vk);
+
+		for(int j=0; j<3; j++) {
+			float angle = (float)j / 3.0 * 2 * M_PI;
+			/* dir of each anchor relative to hair end */
+			Vec3 dir = Vec3(cos(angle), sin(angle), 0);
+			dir = basis * dir;
+			hair[i].anchor_dirs[j] = hair[i].pos + dir - hair[i].spawn_pt;
+		}
+	}
 	return true;
 }
 
 void Hair::draw() const
 {
 	glPushAttrib(GL_ENABLE_BIT);
-	glDisable(GL_DEPTH_TEST);
+//	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_LIGHTING);
-	glPointSize(2);
-	glBegin(GL_POINTS);
-	for(size_t i = 0; i < spawn_points.size(); i++) {
-		glColor3f(1, 1, 0);
-		glVertex3f(spawn_points[i].x, spawn_points[i].y, spawn_points[i].z);
+	glPointSize(5);
+	glLineWidth(2);
+
+	glBegin(GL_LINES);
+	for(size_t i=0; i<hair.size(); i++) {
+		glColor3f(1, 0, 1);
+		glVertex3f(hair[i].pos.x, hair[i].pos.y, hair[i].pos.z);
+		Vec3 p = hair[i].spawn_pt;
+		glVertex3f(p.x, p.y, p.z);
 	}
 	glEnd();
+
+	glBegin(GL_POINTS);
+	glColor3f(0.5, 1.0, 0.5);
+	for(size_t i=0; i<hair.size(); i++) {
+		for(int j=0; j<3; j++) {
+			Vec3 p = hair[i].spawn_pt + hair[i].anchor_dirs[j];
+			glVertex3f(p.x, p.y, p.z);
+		}
+	}
+	glEnd();
+
 	glPopAttrib();
 }
