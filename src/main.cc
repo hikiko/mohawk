@@ -24,8 +24,8 @@ static std::vector<Mesh*> meshes;
 static Mesh *mesh_head;
 static Hair hair;
 
-int win_width, win_height;
-float cam_theta, cam_phi = 25, cam_dist = 8;
+static int win_width, win_height;
+static float cam_theta, cam_phi = 25, cam_dist = 8;
 
 int main(int argc, char **argv)
 {
@@ -69,19 +69,20 @@ static bool init()
 
 	for(size_t i=0; i<meshes.size(); i++) {
 		meshes[i]->calc_bbox();
-
+/*
 		Vec3 v0 = meshes[i]->bbox.v0;
 		Vec3 v1 = meshes[i]->bbox.v1;
 
 		printf("mesh: %s\n", meshes[i]->name.c_str());
 		printf("AABB mesh %d: v0: (%f, %f, %f) v1: (%f, %f, %f)\n",
 				(int)i, v0.x, v0.y, v0.z, v1.x, v1.y, v1.z);
-
+*/
 		meshes[i]->update_vbo(MESH_ALL);
+/*
 		printf("num vertices: %d num triangles: %d\n",
 				(int)meshes[i]->vertices.size(),
 				(int)meshes[i]->indices.size() / 3);
-
+*/
 		if(meshes[i]->name == "head") {
 			mesh_head = meshes[i];
 		}

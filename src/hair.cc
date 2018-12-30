@@ -77,7 +77,7 @@ static void get_spawn_triangles(const Mesh *m, float thresh, std::vector<Triangl
 			faces->push_back(t);
 		}
 	}
-	printf("spawn tri AABB: min y: %f max y: %f\n", min_y, max_y);
+/*	printf("spawn tri AABB: min y: %f max y: %f\n", min_y, max_y);*/
 }
 
 bool Hair::init(const Mesh *m, int max_num_spawns, float thresh)
@@ -174,4 +174,9 @@ void Hair::draw() const
 	glEnd();
 
 	glPopAttrib();
+}
+
+void Hair::set_transform(Mat4 &xform)
+{
+	this->xform = xform;
 }
