@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <string>
 
+#include <gmath/gmath.h>
+
 #include "mesh.h"
 #include "hair.h"
 
@@ -20,6 +22,7 @@ static void keydown(unsigned char key, int x, int y);
 static void keyup(unsigned char key, int x, int y);
 static void mouse(int bn, int st, int x, int y);
 static void motion(int x, int y);
+static void idle();
 
 static std::vector<Mesh*> meshes;
 static Mesh *mesh_head;
@@ -27,7 +30,8 @@ static Hair hair;
 
 static int win_width, win_height;
 static float cam_theta, cam_phi = 25, cam_dist = 8;
-static float hair_deg;
+static float head_rz, head_rx; /* rot angles x, z axis */
+static Mat4 head_xform;
 
 int main(int argc, char **argv)
 {
@@ -36,12 +40,16 @@ int main(int argc, char **argv)
 	glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
 	glutCreateWindow("hair test");
 
+	/* for the keydown, keyup functions to work */
+	glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
+
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keydown);
 	glutKeyboardUpFunc(keyup);
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
+	glutIdleFunc(idle);
 
 	if(!init()) {
 		return 1;
@@ -114,11 +122,17 @@ static void display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	head_xform = Mat4::identity;
+	head_xform.rotate_x(gph::deg_to_rad(head_rx));
+	head_xform.rotate_z(-gph::deg_to_rad(head_rz));
+
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glTranslatef(0, 0, -cam_dist);
 	glRotatef(cam_phi, 1, 0, 0);
 	glRotatef(cam_theta, 0, 1, 0);
+
+	glMultMatrixf(head_xform[0]);
 
 	for(size_t i=0; i<meshes.size(); i++) {
 		meshes[i]->draw();
@@ -141,12 +155,13 @@ static void reshape(int x, int y)
 	gluPerspective(50.0, (float)x / (float)y, 0.5, 500.0);
 }
 
+static bool hpressed;
 static void keydown(unsigned char key, int /*x*/, int /*y*/)
 {
 	switch(key) {
 	case 'h':
 	case 'H':
-		printf("key %u down\n", key);
+		hpressed = true;
 		break;
 	case 27:
 		exit(0);
@@ -158,12 +173,12 @@ static void keydown(unsigned char key, int /*x*/, int /*y*/)
 static void keyup(unsigned char key, int /*x*/, int /*y*/)
 {
 	switch(key) {
-		case 'h':
-		case 'H':
-			printf("key %u up\n", key);
-			break;
-		default:
-			break;
+	case 'h':
+	case 'H':
+		hpressed = false;
+		break;
+	default:
+		break;
 	}
 }
 
@@ -186,17 +201,34 @@ static void motion(int x, int y)
 
 	if(!dx && !dy) return;
 
-	if(bnstate[0]) {
-		cam_theta += dx * 0.5;
-		cam_phi += dy * 0.5;
+	if(hpressed) {
+		if(bnstate[0]) {
+			head_rz += dx * 0.5;
+			head_rx += dy * 0.5;
 
-		if(cam_phi < -90) cam_phi = -90;
-		if(cam_phi > 90) cam_phi = 90;
-		glutPostRedisplay();
+			if(head_rx < -45) head_rx = -45;
+			if(head_rx > 45) head_rx = 45;
+
+			if(head_rz < -90) head_rz = -90;
+			if(head_rz > 90) head_rx = 90;
+		}
 	}
-	if(bnstate[2]) {
-		cam_dist += dy * 0.1;
-		if(cam_dist < 0) cam_dist = 0;
-		glutPostRedisplay();
+	else {
+		if(bnstate[0]) {
+			cam_theta += dx * 0.5;
+			cam_phi += dy * 0.5;
+
+			if(cam_phi < -90) cam_phi = -90;
+			if(cam_phi > 90) cam_phi = 90;
+		}
+		if(bnstate[2]) {
+			cam_dist += dy * 0.1;
+			if(cam_dist < 0) cam_dist = 0;
+		}
 	}
+}
+
+static void idle()
+{
+	glutPostRedisplay();
 }
