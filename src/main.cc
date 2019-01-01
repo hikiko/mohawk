@@ -138,6 +138,7 @@ static void display()
 		meshes[i]->draw();
 	}
 
+	hair.set_transform(head_xform);
 	hair.draw();
 
 	glutSwapBuffers();

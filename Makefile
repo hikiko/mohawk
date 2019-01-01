@@ -6,11 +6,10 @@ bin = hair
 
 dbg = -g
 opt = -O0
-inc = -Isrc -Isrc/shaders -Isrc/math -I/home/eleni/igalia/install/include
-
+inc = -Isrc -Isrc/shaders -Isrc/math
 CXX = g++
 CXXFLAGS = -pedantic -Wall $(dbg) $(opt) $(inc)
-LDFLAGS = -lGL -lGLU -lglut -lGLEW -limago -lassimp -lgmath -L/home/eleni/igalia/install/lib/libglut.so
+LDFLAGS = -lGL -lGLU -lglut -lGLEW -limago -lassimp -lgmath
 
 $(bin): $(obj)
 	$(CXX) -o $@ $(obj) $(LDFLAGS)
