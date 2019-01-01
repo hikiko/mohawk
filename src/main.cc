@@ -17,6 +17,7 @@ static void cleanup();
 static void display();
 static void reshape(int x, int y);
 static void keydown(unsigned char key, int x, int y);
+static void keyup(unsigned char key, int x, int y);
 static void mouse(int bn, int st, int x, int y);
 static void motion(int x, int y);
 
@@ -26,6 +27,7 @@ static Hair hair;
 
 static int win_width, win_height;
 static float cam_theta, cam_phi = 25, cam_dist = 8;
+static float hair_deg;
 
 int main(int argc, char **argv)
 {
@@ -37,6 +39,7 @@ int main(int argc, char **argv)
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keydown);
+	glutKeyboardUpFunc(keyup);
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
 
@@ -141,8 +144,26 @@ static void reshape(int x, int y)
 static void keydown(unsigned char key, int /*x*/, int /*y*/)
 {
 	switch(key) {
+	case 'h':
+	case 'H':
+		printf("key %u down\n", key);
+		break;
 	case 27:
 		exit(0);
+	default:
+		break;
+	}
+}
+
+static void keyup(unsigned char key, int /*x*/, int /*y*/)
+{
+	switch(key) {
+		case 'h':
+		case 'H':
+			printf("key %u up\n", key);
+			break;
+		default:
+			break;
 	}
 }
 
