@@ -11,7 +11,7 @@
 #include "mesh.h"
 #include "hair.h"
 
-#define MAX_NUM_SPAWNS 4
+#define MAX_NUM_SPAWNS 400
 #define THRESH 0.5
 
 static bool init();
@@ -120,6 +120,11 @@ static void cleanup()
 
 static void display()
 {
+	static unsigned long prev_time;
+	unsigned long msec = glutGet(GLUT_ELAPSED_TIME);
+	float dt = (float)(msec - prev_time) / 1000.0;
+	prev_time = msec;
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	head_xform = Mat4::identity;
@@ -131,14 +136,16 @@ static void display()
 	glTranslatef(0, 0, -cam_dist);
 	glRotatef(cam_phi, 1, 0, 0);
 	glRotatef(cam_theta, 0, 1, 0);
-
+	/* multiplying with the head rot matrix */
+	glPushMatrix();
 	glMultMatrixf(head_xform[0]);
-
 	for(size_t i=0; i<meshes.size(); i++) {
 		meshes[i]->draw();
 	}
+	glPopMatrix();
 
 	hair.set_transform(head_xform);
+	hair.update(dt);
 	hair.draw();
 
 	glutSwapBuffers();
@@ -211,7 +218,7 @@ static void motion(int x, int y)
 			if(head_rx > 45) head_rx = 45;
 
 			if(head_rz < -90) head_rz = -90;
-			if(head_rz > 90) head_rx = 90;
+			if(head_rz > 90) head_rz = 30;
 		}
 	}
 	else {

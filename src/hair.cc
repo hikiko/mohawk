@@ -8,6 +8,11 @@
 #include "kdtree.h"
 #include "hair.h"
 
+/* spring constant */
+
+#define K_ANC 4.0
+#define DAMPING 1.5
+
 struct Triangle {
 	Vec3 v[3];
 	Vec3 n[3];
@@ -122,7 +127,7 @@ bool Hair::init(const Mesh *m, int max_num_spawns, float thresh)
 
 	for(size_t i=0; i<hair.size(); i++) {
 		hair[i].pos = hair[i].spawn_pt + hair[i].spawn_dir * hair_length;
-		
+
 		/* orthonormal basis */
 		Vec3 vk = hair[i].spawn_dir;
 		Vec3 vi = Vec3(1, 0, 0);
@@ -137,7 +142,7 @@ bool Hair::init(const Mesh *m, int max_num_spawns, float thresh)
 
 		for(int j=0; j<3; j++) {
 			float angle = (float)j / 3.0 * 2 * M_PI;
-			/* dir of each anchor relative to hair end */
+			/* dir of each anchor relative to hair root */
 			Vec3 dir = Vec3(cos(angle), sin(angle), 0);
 			dir = basis * dir;
 			hair[i].anchor_dirs[j] = hair[i].pos + dir - hair[i].spawn_pt;
@@ -146,32 +151,40 @@ bool Hair::init(const Mesh *m, int max_num_spawns, float thresh)
 	return true;
 }
 
+static Vec3 dbg_force;
 void Hair::draw() const
 {
 	glPushAttrib(GL_ENABLE_BIT);
 //	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_LIGHTING);
 	glPointSize(5);
-	glLineWidth(2);
+	glLineWidth(3);
 
 	glBegin(GL_LINES);
 	for(size_t i=0; i<hair.size(); i++) {
 		glColor3f(1, 0, 1);
-		glVertex3f(hair[i].pos.x, hair[i].pos.y, hair[i].pos.z);
-		Vec3 p = hair[i].spawn_pt;
+		Vec3 p = xform * hair[i].spawn_pt;
 		glVertex3f(p.x, p.y, p.z);
+		Vec3 dir = normalize(hair[i].pos - p) * hair_length;
+		Vec3 end = p + dir;
+		glVertex3f(end.x, end.y, end.z);
+/*
+		glColor3f(1, 1, 0);
+		glVertex3f(hair[i].pos.x, hair[i].pos.y, hair[i].pos.z);
+		Vec3 end = hair[i].pos + dbg_force * 2.0;
+		glVertex3f(end.x, end.y, end.z);
+		*/
 	}
 	glEnd();
 
+	/*
 	glBegin(GL_POINTS);
 	glColor3f(0.5, 1.0, 0.5);
-	for(size_t i=0; i<hair.size(); i++) {
-		for(int j=0; j<3; j++) {
-			Vec3 p = hair[i].spawn_pt + hair[i].anchor_dirs[j];
-			glVertex3f(p.x, p.y, p.z);
-		}
+	for(size_t i = 0; i < hair.size(); i++) {
+		Vec3 p = xform * (hair[i].spawn_pt + hair[i].spawn_dir * hair_length);
+		glVertex3f(p.x, p.y, p.z);
 	}
-	glEnd();
+	glEnd();*/
 
 	glPopAttrib();
 }
@@ -179,4 +192,21 @@ void Hair::draw() const
 void Hair::set_transform(Mat4 &xform)
 {
 	this->xform = xform;
+}
+
+void Hair::update(float dt)
+{
+	for(size_t i = 0; i < hair.size(); i++) {
+		/* in local space */
+		Vec3 hair_end = hair[i].spawn_pt + hair[i].spawn_dir * hair_length;
+		Vec3 anchor = xform * hair_end;
+
+		Vec3 force = (anchor - hair[i].pos) * K_ANC;
+
+		Vec3 accel = force; /* mass 1 */
+		hair[i].velocity += ((-hair[i].velocity * DAMPING) + accel) * dt;
+		hair[i].pos += hair[i].velocity * dt;
+
+		dbg_force = force;
+	}
 }

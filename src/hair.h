@@ -28,6 +28,7 @@ public:
 	void draw() const;
 
 	void set_transform(Mat4 &xform);
+	void update(float dt);
 };
 
 #endif //PARTICLES_H_
