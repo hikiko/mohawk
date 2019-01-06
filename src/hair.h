@@ -8,8 +8,6 @@
 struct HairStrand {
 	Vec3 pos;
 	Vec3 velocity;
-	/* directions relative to the spawn point */
-	Vec3 anchor_dirs[3];
 	Vec3 spawn_pt;
 	Vec3 spawn_dir;
 };

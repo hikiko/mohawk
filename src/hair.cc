@@ -127,26 +127,6 @@ bool Hair::init(const Mesh *m, int max_num_spawns, float thresh)
 
 	for(size_t i=0; i<hair.size(); i++) {
 		hair[i].pos = hair[i].spawn_pt + hair[i].spawn_dir * hair_length;
-
-		/* orthonormal basis */
-		Vec3 vk = hair[i].spawn_dir;
-		Vec3 vi = Vec3(1, 0, 0);
-		if(fabs(vk.x > 0.99)) {
-			vi = Vec3(0, -1, 0);
-		}
-		Vec3 vj = normalize(cross(vk, vi));
-		vi = cross(vj, vk);
-
-		/* identity when the hair points to the z axis */
-		Mat4 basis = Mat4(vi, vj, vk);
-
-		for(int j=0; j<3; j++) {
-			float angle = (float)j / 3.0 * 2 * M_PI;
-			/* dir of each anchor relative to hair root */
-			Vec3 dir = Vec3(cos(angle), sin(angle), 0);
-			dir = basis * dir;
-			hair[i].anchor_dirs[j] = hair[i].pos + dir - hair[i].spawn_pt;
-		}
 	}
 	return true;
 }
@@ -171,8 +151,8 @@ void Hair::draw() const
 /*
 		glColor3f(1, 1, 0);
 		glVertex3f(hair[i].pos.x, hair[i].pos.y, hair[i].pos.z);
-		Vec3 end = hair[i].pos + dbg_force * 2.0;
-		glVertex3f(end.x, end.y, end.z);
+		Vec3 fend = hair[i].pos + dbg_force * 2.0;
+		glVertex3f(fend.x, fend.y, fend.z);
 		*/
 	}
 	glEnd();
