@@ -146,14 +146,18 @@ static void display()
 	/* multiplying with the head rot matrix */
 	glPushMatrix();
 	glMultMatrixf(head_xform[0]);
+/*
 	glPushAttrib(GL_LINE_BIT);
 	glLineWidth(1);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+*/
 	for(size_t i=0; i<meshes.size(); i++) {
 		meshes[i]->draw();
 	}
+/*
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glPopAttrib();
+*/
 
 	glPopMatrix();
 
@@ -182,7 +186,7 @@ static void display()
 	}
 	glEnd();
 	glPopAttrib();
-	*/
+*/
 
 	glutSwapBuffers();
 	assert(glGetError() == GL_NO_ERROR);

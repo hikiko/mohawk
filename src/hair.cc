@@ -187,7 +187,7 @@ void Hair::update(float dt)
 		hair[i].velocity += ((-hair[i].velocity * DAMPING) + accel) * dt;
 		Vec3 new_pos = hair[i].pos + hair[i].velocity * dt;
 
-		hair[i].pos = handle_collision(new_pos);
+		hair[i].pos = new_pos; //= handle_collision(new_pos);
 
 		dbg_force = force;
 	}
