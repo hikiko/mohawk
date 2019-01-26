@@ -12,7 +12,7 @@
 #include "hair.h"
 #include "object.h"
 
-#define MAX_NUM_SPAWNS 400
+#define MAX_NUM_SPAWNS 800
 #define THRESH 0.5
 
 static bool init();
@@ -25,9 +25,13 @@ static void mouse(int bn, int st, int x, int y);
 static void motion(int x, int y);
 static void idle();
 
+static unsigned int gen_grad_tex(int sz, const Vec3 &c0, const Vec3 &c1);
+
 static std::vector<Mesh*> meshes;
 static Mesh *mesh_head;
 static Hair hair;
+
+static unsigned int grad_tex;
 
 static int win_width, win_height;
 static float cam_theta, cam_phi = 25, cam_dist = 8;
@@ -66,9 +70,11 @@ static bool init()
 {
 	glewInit();
 
+	grad_tex = gen_grad_tex(32, Vec3(0, 0, 1), Vec3(0, 1, 0));
+
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-	glEnable(GL_COLOR_MATERIAL);
+//	glEnable(GL_COLOR_MATERIAL);
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
@@ -187,6 +193,36 @@ static void display()
 	glEnd();
 	glPopAttrib();
 */
+	float plane[4] = {
+		0, 0, 0.5 / 350, 0.5 
+	};
+
+	glPushMatrix();
+	glRotatef(90, 1, 0, 0);
+
+	glPushAttrib(GL_ENABLE_BIT);
+	glDisable(GL_LIGHTING);
+	glEnable(GL_TEXTURE_1D);
+	glBindTexture(GL_TEXTURE_1D, grad_tex);
+	glFrontFace(GL_CW);
+	glEnable(GL_TEXTURE_GEN_S);
+	glTexGenfv(GL_S, GL_OBJECT_PLANE, plane);
+	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+	glColor3f(1, 1, 1);
+
+	glDepthMask(0);
+
+	glutSolidSphere(350, 16, 8);
+	glDisable(GL_TEXTURE_1D);
+
+	glColor3f(0.2, 0.2, 0.2);
+	glutWireSphere(350, 32, 16);
+
+	glDepthMask(1);
+	glFrontFace(GL_CCW);
+	glPopAttrib();
+
+	glPopMatrix();
 
 	glutSwapBuffers();
 	assert(glGetError() == GL_NO_ERROR);
@@ -279,4 +315,30 @@ static void motion(int x, int y)
 static void idle()
 {
 	glutPostRedisplay();
+}
+
+static unsigned int gen_grad_tex(int sz, const Vec3 &c0, const Vec3 &c1)
+{
+	unsigned char *pixels = new unsigned char[sz * 3];
+	for(int i=0; i<sz; i++) {
+		float t = (float)i / (float)(sz - 1);
+		Vec3 color = c0 + (c1 - c0) * t;
+		pixels[i * 3] = color.x * 255;
+		pixels[i * 3 + 1] = color.y * 255;
+		pixels[i * 3 + 2] = color.z * 255;
+	}
+
+	unsigned int tex;
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_1D, tex);
+
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, sz, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
+	delete [] pixels;
+
+	return tex;
 }

@@ -147,6 +147,7 @@ void Hair::draw() const
 		glVertex3f(p.x, p.y, p.z);
 		Vec3 dir = normalize(hair[i].pos - p) * hair_length;
 		Vec3 end = p + dir;
+		glColor3f(1, 1, 0);
 		glVertex3f(end.x, end.y, end.z);
 /*
 		glColor3f(1, 1, 0);
