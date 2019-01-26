@@ -187,7 +187,20 @@ void Hair::update(float dt)
 		hair[i].velocity += ((-hair[i].velocity * DAMPING) + accel) * dt;
 		Vec3 new_pos = hair[i].pos + hair[i].velocity * dt;
 
-		hair[i].pos = new_pos; //= handle_collision(new_pos);
+		/* collision detection with the head */
+		Vec3 normal = xform.upper3x3() * hair[i].spawn_dir;
+		Vec3 root = xform * hair[i].spawn_pt;
+		Vec3 dir = new_pos - root;
+		
+		normal.normalize();
+
+		/* angle that will cause the hair to be rendered inside the head */
+		float d = dot(dir, normal);
+		if(d < 0) {
+			new_pos += -d * normal;
+		}
+
+		hair[i].pos = handle_collision(new_pos);
 
 		dbg_force = force;
 	}

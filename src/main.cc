@@ -33,7 +33,7 @@ static int win_width, win_height;
 static float cam_theta, cam_phi = 25, cam_dist = 8;
 static float head_rz, head_rx; /* rot angles x, z axis */
 static Mat4 head_xform;
-static CollSphere coll_sphere; /* sphere used for collision detection */
+//static CollSphere coll_sphere; /* sphere used for collision detection */
 
 int main(int argc, char **argv)
 {
@@ -105,15 +105,15 @@ static bool init()
 		return false;
 	}
 
-	coll_sphere.radius = 1.0;
-	coll_sphere.center = Vec3(0, 0.6, 0.53);
+//	coll_sphere.radius = 1.0;
+//	coll_sphere.center = Vec3(0, 0.6, 0.53);
 
 	if(!hair.init(mesh_head, MAX_NUM_SPAWNS, THRESH)) {
 		fprintf(stderr, "Failed to initialize hair\n");
 		return false;
 	}
 
-	hair.add_collider(&coll_sphere);
+//	hair.add_collider(&coll_sphere);
 
 	return true;
 }
