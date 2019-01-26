@@ -4,6 +4,7 @@
 #include <gmath/gmath.h>
 
 #include "mesh.h" 
+#include "object.h"
 
 struct HairStrand {
 	Vec3 pos;
@@ -17,6 +18,7 @@ private:
 	float hair_length;
 	std::vector<HairStrand> hair;
 	Mat4 xform;
+	std::vector<CollSphere *> colliders;
 
 public:
 	Hair();
@@ -27,6 +29,8 @@ public:
 
 	void set_transform(Mat4 &xform);
 	void update(float dt);
+	void add_collider(CollSphere *cobj);
+	Vec3 handle_collision(const Vec3 &v) const;
 };
 
 #endif //PARTICLES_H_

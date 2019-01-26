@@ -185,8 +185,30 @@ void Hair::update(float dt)
 
 		Vec3 accel = force; /* mass 1 */
 		hair[i].velocity += ((-hair[i].velocity * DAMPING) + accel) * dt;
-		hair[i].pos += hair[i].velocity * dt;
+		Vec3 new_pos = hair[i].pos + hair[i].velocity * dt;
+
+		hair[i].pos = handle_collision(new_pos);
 
 		dbg_force = force;
 	}
+}
+
+void Hair::add_collider(CollSphere *cobj) {
+	colliders.push_back(cobj);
+}
+
+Vec3 Hair::handle_collision(const Vec3 &v) const
+{
+	/* if we transform the center and the radius of the collider sphere
+	 * we might end up with a spheroid, so better just multiply the 
+	 * position with the inverse transform before check for collisions :*/
+
+	Vec3 new_v = inverse(xform) * v;
+
+	for(size_t i=0; i<colliders.size(); i++) {
+		if(colliders[i]->contains(new_v)) {
+			new_v = colliders[i]->project_surf(new_v);
+		}
+	}
+	return xform * new_v;
 }

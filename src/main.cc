@@ -10,6 +10,7 @@
 
 #include "mesh.h"
 #include "hair.h"
+#include "object.h"
 
 #define MAX_NUM_SPAWNS 400
 #define THRESH 0.5
@@ -32,6 +33,7 @@ static int win_width, win_height;
 static float cam_theta, cam_phi = 25, cam_dist = 8;
 static float head_rz, head_rx; /* rot angles x, z axis */
 static Mat4 head_xform;
+static CollSphere coll_sphere; /* sphere used for collision detection */
 
 int main(int argc, char **argv)
 {
@@ -103,10 +105,15 @@ static bool init()
 		return false;
 	}
 
+	coll_sphere.radius = 1.0;
+	coll_sphere.center = Vec3(0, 0.6, 0.53);
+
 	if(!hair.init(mesh_head, MAX_NUM_SPAWNS, THRESH)) {
 		fprintf(stderr, "Failed to initialize hair\n");
 		return false;
 	}
+
+	hair.add_collider(&coll_sphere);
 
 	return true;
 }
@@ -139,14 +146,43 @@ static void display()
 	/* multiplying with the head rot matrix */
 	glPushMatrix();
 	glMultMatrixf(head_xform[0]);
+	glPushAttrib(GL_LINE_BIT);
+	glLineWidth(1);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	for(size_t i=0; i<meshes.size(); i++) {
 		meshes[i]->draw();
 	}
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glPopAttrib();
+
 	glPopMatrix();
 
 	hair.set_transform(head_xform);
 	hair.update(dt);
 	hair.draw();
+
+/*
+	glPushAttrib(GL_ENABLE_BIT);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_LIGHTING);
+	glBegin(GL_POINTS);
+	for (int i=0; i<500; i++) {
+		Vec3 p;
+		p.x = (float)rand() / RAND_MAX * 8 - 4;
+		p.y = (float)rand() / RAND_MAX * 4;
+		p.z = 0;
+
+		Vec3 tmp = inverse(head_xform) * p;
+		if(coll_sphere.contains(tmp)) {
+			glColor3f(1, 0, 0);
+		}
+		else glColor3f(0, 1, 0);
+
+		glVertex3f(p.x, p.y, p.z);
+	}
+	glEnd();
+	glPopAttrib();
+	*/
 
 	glutSwapBuffers();
 	assert(glGetError() == GL_NO_ERROR);
