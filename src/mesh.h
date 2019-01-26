@@ -19,6 +19,14 @@ struct Aabb {
 	Vec3 v1;
 };
 
+struct Material {
+	Vec3 diffuse;
+	Vec3 specular;
+	float shininess;
+
+	unsigned int tex;
+};
+
 class Mesh {
 private:
 	unsigned int vbo_vertices;
@@ -34,6 +42,7 @@ public:
 	~Mesh();
 
 	Aabb bbox;
+	Material mtl;
 
 	std::string name;
 	std::vector<uint16_t> indices;

@@ -6,6 +6,7 @@
 #include <assimp/mesh.h>
 
 #include <float.h>
+#include <imago2.h>
 
 #include "mesh.h"
 
@@ -18,6 +19,10 @@ Mesh::Mesh()
 
 	num_vertices = 0;
 	num_indices = 0;
+
+	mtl.tex = 0;
+	mtl.diffuse = Vec3(1, 1, 1);
+	mtl.shininess = 50;
 }
 
 Mesh::~Mesh()
@@ -38,6 +43,24 @@ Mesh::~Mesh()
 
 void Mesh::draw() const
 {
+	/* set material */
+	float diff[4] = {
+		mtl.diffuse.x, mtl.diffuse.y, mtl.diffuse.z, 1.0
+	};
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, diff);
+
+	float spec[4] = {
+		mtl.specular.x, mtl.specular.y, mtl.specular.z, 1.0
+	};
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
+
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, mtl.shininess);
+
+	if(mtl.tex) {
+		glBindTexture(GL_TEXTURE_2D, mtl.tex);
+		glEnable(GL_TEXTURE_2D);
+	}
+
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices);
 	glVertexPointer(3, GL_FLOAT, 0, 0);
 
@@ -68,6 +91,10 @@ void Mesh::draw() const
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
+	
+
+	if(mtl.tex)
+		glDisable(GL_TEXTURE_2D);
 }
 
 void Mesh::update_vbo(unsigned int which)
@@ -144,12 +171,14 @@ std::vector<Mesh*> load_meshes(const char *fname)
 
 	for(unsigned int j=0; j<scene->mNumMeshes; j++) {
 		aiMesh *amesh = scene->mMeshes[j];
+		aiMaterial *amtl = scene->mMaterials[amesh->mMaterialIndex];
 
 		if(!amesh->HasPositions() || !amesh->mNumFaces)
 			continue;
 
 		Mesh *mesh = new Mesh;
 		mesh->name = std::string(amesh->mName.C_Str());
+		printf("loading mesh: %s\n", mesh->name.c_str());
 
 		for(unsigned int i=0; i<amesh->mNumVertices; i++) {
 			Vec3 vertex = Vec3(amesh->mVertices[i].x,
@@ -180,6 +209,43 @@ std::vector<Mesh*> load_meshes(const char *fname)
 			for(int j=0; j<3; j++) {
 				mesh->indices.push_back(amesh->mFaces[i].mIndices[j]);
 			}
+		}
+
+		aiColor4D acol;
+		aiGetMaterialColor(amtl, AI_MATKEY_COLOR_DIFFUSE, &acol);
+		mesh->mtl.diffuse = Vec3(acol.r, acol.g, acol.b);
+
+		float sstr;
+		aiGetMaterialFloat(amtl, AI_MATKEY_SHININESS_STRENGTH, &sstr);
+
+		aiGetMaterialColor(amtl, AI_MATKEY_COLOR_SPECULAR, &acol);
+		mesh->mtl.specular = sstr * Vec3(acol.r, acol.g, acol.b) * 0.3;
+		printf("mtl sstr: %f\n", sstr);
+		printf("mtl spec: %f %f %f\n", acol.r, acol.g, acol.b);
+
+		float shin;
+		aiGetMaterialFloat(amtl, AI_MATKEY_SHININESS, &shin);
+		mesh->mtl.shininess = shin * 6;
+		printf("mtl shin: %f\n", mesh->mtl.shininess);
+
+		aiString astr;
+		if(aiGetMaterialTexture(amtl, aiTextureType_DIFFUSE, 0, &astr) == 0) {
+			char *fname = astr.data;
+			char *slash;
+			char *path;
+
+			if((slash = strrchr(fname, '/'))) {
+				fname = slash + 1;
+			}
+			if((slash = strrchr(fname, '\\'))) {
+				fname = slash + 1;
+			}
+			path = new char[strlen(fname) + 6];
+			sprintf(path, "data/%s", fname);
+			if(!(mesh->mtl.tex = img_gltexture_load(path))) {
+				fprintf(stderr, "Failed to load texture %s\n", fname);
+			}
+			delete [] path;
 		}
 
 		meshes.push_back(mesh);
