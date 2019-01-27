@@ -159,7 +159,12 @@ static void display()
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 */
 	for(size_t i=0; i<meshes.size(); i++) {
-		meshes[i]->draw();
+		if(!meshes[i]->mtl.tex || meshes[i]->mtl.tex_opaque)
+			meshes[i]->draw();
+	}
+	for(size_t i=0; i<meshes.size(); i++) {
+		if(meshes[i]->mtl.tex && !meshes[i]->mtl.tex_opaque)
+			meshes[i]->draw();
 	}
 /*
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
