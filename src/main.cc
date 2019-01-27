@@ -24,9 +24,13 @@ static void keyup(unsigned char key, int x, int y);
 static void mouse(int bn, int st, int x, int y);
 static void motion(int x, int y);
 static void idle();
+static void sball_motion(int x, int y, int z);
+static void sball_rotate(int x, int y, int z);
+static void sball_button(int bn, int st);
 
 static unsigned int gen_grad_tex(int sz, const Vec3 &c0, const Vec3 &c1);
 static void draw_text(const char *text, int x, int y, float sz, const Vec3 &color);
+static void update_sball_matrix();
 
 static std::vector<Mesh*> meshes;
 static Mesh *mesh_head;
@@ -39,6 +43,13 @@ static float cam_theta, cam_phi = 25, cam_dist = 8;
 static float head_rz, head_rx; /* rot angles x, z axis */
 static Mat4 head_xform;
 //static CollSphere coll_sphere; /* sphere used for collision detection */
+
+// spaceball (6dof control) state
+static Vec3 sball_pos;
+static Quat sball_rot;
+static Mat4 sball_xform;
+static bool sball_update_pending;
+
 
 int main(int argc, char **argv)
 {
@@ -57,6 +68,9 @@ int main(int argc, char **argv)
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
 	glutIdleFunc(idle);
+	glutSpaceballMotionFunc(sball_motion);
+	glutSpaceballRotateFunc(sball_rotate);
+	glutSpaceballButtonFunc(sball_button);
 
 	if(!init()) {
 		return 1;
@@ -140,11 +154,17 @@ static void display()
 	float dt = (float)(msec - prev_time) / 1000.0;
 	prev_time = msec;
 
+	if(sball_update_pending) {
+		update_sball_matrix();
+		sball_update_pending = false;
+	}
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	head_xform = Mat4::identity;
 	head_xform.rotate_x(gph::deg_to_rad(head_rx));
 	head_xform.rotate_z(-gph::deg_to_rad(head_rz));
+	head_xform *= sball_xform;
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -327,6 +347,35 @@ static void idle()
 	glutPostRedisplay();
 }
 
+static void sball_motion(int x, int y, int z)
+{
+	sball_pos.x += (float)x * 0.001;
+	sball_pos.y += (float)y * 0.001;
+	sball_pos.z -= (float)z * 0.001;
+	sball_update_pending = true;
+}
+
+static void sball_rotate(int x, int y, int z)
+{
+	Vec3 axis = Vec3(x, y, -z);
+	float axis_len = length(axis);
+	if(axis_len > 0.0f) {
+		Quat q;
+		q.set_rotation(axis / axis_len, axis_len * 0.001);
+		sball_rot = q * sball_rot;
+		sball_update_pending = true;
+	}
+}
+
+static void sball_button(int bn, int st)
+{
+	if(st != GLUT_DOWN) return;
+
+	sball_pos = Vec3(0, 0, 0);
+	sball_rot = Quat::identity;
+	sball_xform = Mat4::identity;
+}
+
 static unsigned int gen_grad_tex(int sz, const Vec3 &c0, const Vec3 &c1)
 {
 	unsigned char *pixels = new unsigned char[sz * 3];
@@ -386,4 +435,15 @@ static void draw_text(const char *text, int x, int y, float sz, const Vec3 &colo
 	glPopMatrix();
 
 	glPopAttrib();
+}
+
+static void update_sball_matrix()
+{
+	Mat4 rot = sball_rot.calc_matrix();
+	//rot.transpose();
+
+	Mat4 trans;
+	trans.translation(sball_pos);
+
+	sball_xform = rot * trans;
 }
