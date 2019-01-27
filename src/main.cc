@@ -12,7 +12,7 @@
 #include "hair.h"
 #include "object.h"
 
-#define MAX_NUM_SPAWNS 800
+#define MAX_NUM_SPAWNS 1600
 #define THRESH 0.5
 
 static bool init();

@@ -5,7 +5,7 @@ dep = $(obj:.o=.d)
 bin = hair
 
 dbg = -g
-opt = -O0
+opt = -O3 -ffast-math
 inc = -Isrc -Isrc/shaders -Isrc/math
 CXX = g++
 CC = gcc
