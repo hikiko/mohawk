@@ -10,8 +10,9 @@
 enum {
 	MESH_VERTEX = 1,
 	MESH_NORMAL = 2,
-	MESH_COLOR = 4,
-	MESH_INDEX = 8
+	MESH_TEXCOORDS = 4,
+	MESH_COLOR = 8,
+	MESH_INDEX = 16
 };
 
 struct Aabb {
@@ -25,12 +26,14 @@ struct Material {
 	float shininess;
 
 	unsigned int tex;
+	bool tex_opaque;
 };
 
 class Mesh {
 private:
 	unsigned int vbo_vertices;
 	unsigned int vbo_normals;
+	unsigned int vbo_texcoords;
 	unsigned int vbo_colors;
 	unsigned int ibo;
 
@@ -47,6 +50,7 @@ public:
 	std::string name;
 	std::vector<uint16_t> indices;
 	std::vector<Vec3> vertices;
+	std::vector<Vec2> texcoords;
 	std::vector<Vec3> normals;
 	std::vector<Vec3> colors;
 

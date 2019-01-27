@@ -129,6 +129,7 @@ static void cleanup()
 	for(size_t i=0; i<meshes.size(); i++) {
 		delete meshes[i];
 	}
+	glDeleteTextures(1, &grad_tex);
 }
 
 static void display()
@@ -194,7 +195,7 @@ static void display()
 	glPopAttrib();
 */
 	float plane[4] = {
-		0, 0, 0.5 / 350, 0.5 
+		0, 0, 0.5 / 350, 0.5
 	};
 
 	glPushMatrix();

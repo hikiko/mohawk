@@ -110,6 +110,7 @@ bool Hair::init(const Mesh *m, int max_num_spawns, float thresh)
 		if (res && !kd_res_end(res)) {
 			Vec3 nearest;
 			kd_res_item3f(res, &nearest.x, &nearest.y, &nearest.z);
+			kd_res_free(res);
 			if(distance_sq(rpoint, nearest) < min_dist * min_dist)
 				continue;
 		}

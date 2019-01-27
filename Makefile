@@ -8,7 +8,9 @@ dbg = -g
 opt = -O0
 inc = -Isrc -Isrc/shaders -Isrc/math
 CXX = g++
+CC = gcc
 CXXFLAGS = -pedantic -Wall $(dbg) $(opt) $(inc)
+CFLAGS = -pedantic -Wall $(dbg) $(opt) $(inc)
 LDFLAGS = -lGL -lGLU -lglut -lGLEW -limago -lassimp -lgmath
 
 $(bin): $(obj)
