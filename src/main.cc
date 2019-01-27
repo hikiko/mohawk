@@ -26,6 +26,7 @@ static void motion(int x, int y);
 static void idle();
 
 static unsigned int gen_grad_tex(int sz, const Vec3 &c0, const Vec3 &c1);
+static void draw_text(const char *text, int x, int y, float sz, const Vec3 &color);
 
 static std::vector<Mesh*> meshes;
 static Mesh *mesh_head;
@@ -230,6 +231,9 @@ static void display()
 
 	glPopMatrix();
 
+	draw_text("Hold h to move the head with the mouse!", 15, 15, 0.0015 * win_width, Vec3(0, 0, 0));
+	draw_text("Hold h to move the head with the mouse!", 12, 17, 0.0015 * win_width, Vec3(0.8, 0.5, 0.7));
+
 	glutSwapBuffers();
 	assert(glGetError() == GL_NO_ERROR);
 }
@@ -347,4 +351,39 @@ static unsigned int gen_grad_tex(int sz, const Vec3 &c0, const Vec3 &c1)
 	delete [] pixels;
 
 	return tex;
+}
+
+static void draw_text(const char *text, int x, int y, float sz, const Vec3 &color)
+{
+	glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POINT_BIT);
+
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_LIGHTING);
+	glLineWidth(3);
+	glPointSize(3);
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, win_width, 0, win_height, -1, 1);
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	glTranslatef(x, y, 0);
+	glScalef(0.1 * sz, 0.1 * sz, 1);
+
+	glColor3f(color.x, color.y, color.z);
+	while(*text != '\0') {
+		glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, *text);
+		text++;
+	}
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+
+	glPopAttrib();
 }
