@@ -6,6 +6,22 @@ Hair simulation.
 Demo:
 https://www.youtube.com/watch?v=MfrZ_0EJvXk
 
+Build Instructions
+------------------
+Prerequisites:
+
+Build gph-math following the instructions here:
+https://github.com/jtsiomb/gph-math/
+
+and libimago following the instructions here:
+https://github.com/jtsiomb/libimago
+
+Then in the program directory run:
+
+$ make
+
+$ ./hair
+
 License
 -------
 Copyright (C) 2019 Eleni Maria Stea <elene.mst@gmail.com>
