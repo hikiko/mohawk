@@ -3,7 +3,7 @@
 
 #include <gmath/gmath.h>
 
-#include "mesh.h" 
+#include "mesh.h"
 #include "object.h"
 
 struct HairStrand {

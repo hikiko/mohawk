@@ -193,7 +193,7 @@ void Hair::update(float dt)
 		Vec3 normal = xform.upper3x3() * hair[i].spawn_dir;
 		Vec3 root = xform * hair[i].spawn_pt;
 		Vec3 dir = new_pos - root;
-		
+
 		normal.normalize();
 
 		/* angle that will cause the hair to be rendered inside the head */
@@ -202,7 +202,8 @@ void Hair::update(float dt)
 			new_pos += -d * normal;
 		}
 
-		hair[i].pos = handle_collision(new_pos);
+        hair[i].pos = new_pos;
+//		hair[i].pos = handle_collision(new_pos);
 
 		dbg_force = force;
 	}
@@ -215,7 +216,7 @@ void Hair::add_collider(CollSphere *cobj) {
 Vec3 Hair::handle_collision(const Vec3 &v) const
 {
 	/* if we transform the center and the radius of the collider sphere
-	 * we might end up with a spheroid, so better just multiply the 
+	 * we might end up with a spheroid, so better just multiply the
 	 * position with the inverse transform before check for collisions :*/
 
 	Vec3 new_v = inverse(xform) * v;
